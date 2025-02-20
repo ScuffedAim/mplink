@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { ReactElement, JSXElementConstructor, ReactNode, ReactPortal, Key } from "react";
 
 interface BeatmapInfo {
   md5: string;
@@ -99,8 +98,7 @@ const MODS: ModFlags = {
 function getModsFromFlags(flags: number): string[] {
   return Object.entries(MODS)
     .filter(([flag]) => (flags & parseInt(flag)) !== 0)
-    .map(([_, mod]) => mod.icon);
-}
+    .map(([, mod]) => mod.icon);
 
 async function getmap_by_hash(map_md5: string): Promise<BeatmapInfo> {
     const data = await fetch("https://api.scuffedaim.xyz/v1/get_map_info?md5=" + map_md5, {
@@ -124,7 +122,7 @@ function ScoresDisplay({ initialScores, initialMapInfo, initialUserInfo, slug }:
   initialUserInfo: {[key: number]: UserInfo};
   slug: string;
 }) {
-  const [scores, setScores] = useState(initialScores);
+  const [, setScores] = useState(initialScores);
   const [mapInfoByHash, setMapInfoByHash] = useState(initialMapInfo);
   const [userInfoById, setUserInfoById] = useState(initialUserInfo);
   
@@ -284,10 +282,10 @@ function ScoresDisplay({ initialScores, initialMapInfo, initialUserInfo, slug }:
                   style={{
                     height: `${Math.max(100, Math.min(400, mapScores.length * 80))}px`
                   }}
-                  alt={map ? `${map.title} cover` : "Beatmap cover"}
-                />
+                  alt={map ? `${map.title} cover` : "Beatmap cover"} />
+                
                 <div className="flex-1 grid gap-1">
-                  {(mapScores as [Score]).map((score, scoreIndex) => {
+                  {(mapScores as Score[]).map((score, scoreIndex) => {
                     const user = userInfoById[score.userid];
                     return (
                       <div key={scoreIndex}>
