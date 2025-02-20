@@ -276,10 +276,10 @@ function ScoresDisplay({ initialScores, initialMapInfo, initialUserInfo, slug }:
                   {firstScoreTime.toLocaleTimeString()}
                 </span>
               </h2>
-              <div className="flex gap-4">
+              <div className="flex flex-col md:flex-row gap-4">
                 <img 
                   src={`https://assets.ppy.sh/beatmaps/${map?.set_id}/covers/cover.jpg`}
-                  className={`w-[400px] object-cover rounded-md`}
+                  className={`w-full md:w-[400px] object-cover rounded-md`}
                   style={{
                     height: `${Math.max(100, Math.min(400, mapScores.length * 80))}px`
                   }}
