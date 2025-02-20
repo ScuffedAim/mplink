@@ -99,6 +99,7 @@ function getModsFromFlags(flags: number): string[] {
   return Object.entries(MODS)
     .filter(([flag]) => (flags & parseInt(flag)) !== 0)
     .map(([, mod]) => mod.icon);
+}
 
 async function getmap_by_hash(map_md5: string): Promise<BeatmapInfo> {
     const data = await fetch("https://api.scuffedaim.xyz/v1/get_map_info?md5=" + map_md5, {
@@ -117,7 +118,7 @@ async function getuser_by_id(uid: number): Promise<UserInfo> {
 }
 
 function ScoresDisplay({ initialScores, initialMapInfo, initialUserInfo, slug }: {
-  initialScores: any;
+  initialScores: { data: Score[] };
   initialMapInfo: {[key: string]: BeatmapInfo};
   initialUserInfo: {[key: number]: UserInfo};
   slug: string;
@@ -153,8 +154,8 @@ function ScoresDisplay({ initialScores, initialMapInfo, initialUserInfo, slug }:
   }, {});
 
   // Sort initial scores
-  Object.values(initialGroupedScores).forEach((scores: Score[]) => {
-    scores.sort((a, b) => 
+  Object.values(initialGroupedScores).forEach((scores) => {
+    (scores as Score[]).sort((a, b) => 
       new Date(a.play_time).getTime() - new Date(b.play_time).getTime()
     );
   });
@@ -167,8 +168,8 @@ function ScoresDisplay({ initialScores, initialMapInfo, initialUserInfo, slug }:
         .then(r => r.json())
         .then(newScores => {
           // Fetch new map info if needed
-          const newMapHashes = [...new Set(newScores.data.map((score: Score) => score.map_md5))];
-          const newMapHashesOnly = newMapHashes.filter(hash => !mapInfoByHash[hash]);
+          const newMapHashes = [...new Set(newScores.data.map((score: Score) => score.map_md5))] as string[];
+          const newMapHashesOnly = newMapHashes.filter(hash => !mapInfoByHash[hash as keyof typeof mapInfoByHash]);
           
           let mapPromise = Promise.resolve();
           if (newMapHashesOnly.length > 0) {
@@ -189,7 +190,7 @@ function ScoresDisplay({ initialScores, initialMapInfo, initialUserInfo, slug }:
 
           // Fetch new user info if needed
           const newUserIds = [...new Set(newScores.data.map((score: Score) => score.userid))];
-          const newUserIdsOnly = newUserIds.filter(id => !userInfoById[id]);
+          const newUserIdsOnly = newUserIds.filter(id => !userInfoById[id as keyof typeof userInfoById]);
 
           let userPromise = Promise.resolve();
           if (newUserIdsOnly.length > 0) {
@@ -202,7 +203,7 @@ function ScoresDisplay({ initialScores, initialMapInfo, initialUserInfo, slug }:
             ).then(newUserInfo => {
               const newUserInfoById = { ...userInfoById };
               newUserInfo.forEach(({ uid, info }) => {
-                newUserInfoById[uid] = info.data;
+                newUserInfoById[uid as keyof typeof userInfoById] = info.data;
               });
               setUserInfoById(newUserInfoById);
             });
@@ -238,7 +239,7 @@ function ScoresDisplay({ initialScores, initialMapInfo, initialUserInfo, slug }:
               return acc;
             }, {});
 
-            Object.values(groupedScores).forEach((scores: Score[]) => {
+            (Object.values(groupedScores) as Score[][]).forEach(scores => {
               scores.sort((a, b) => 
                 new Date(a.play_time).getTime() - new Date(b.play_time).getTime()
               );
@@ -339,24 +340,24 @@ export default async function Page({
     params,
   }: {
     params: Promise<{ slug: string }>
-  }) {
+  }) 
+  {
     const slug = (await params).slug
     
     // Initial data fetch
     const scoresRes = await fetch(`https://api.scuffedaim.xyz/v2/scores/match/${slug}`);
     const scores = await scoresRes.json();
-
     // Get initial map info
-    const uniqueMapHashes = [...new Set(scores.data.map((score: Score) => score.map_md5))];
+    const uniqueMapHashes = [...new Set(scores.data.map((score: Score) => score.map_md5))] as string[];
     const mapInfo = await Promise.all(
-      uniqueMapHashes.map(hash => getmap_by_hash(hash))
+      uniqueMapHashes.map((hash: string) => getmap_by_hash(hash))
     );
     const mapInfoByHash = Object.fromEntries(
       mapInfo.map(map => [map.md5, map])
     );
 
     // Get initial user info
-    const uniqueUserIds = [...new Set(scores.data.map((score: Score) => score.userid))];
+    const uniqueUserIds = [...new Set(scores.data.map((score: Score) => score.userid))] as number[];
     const userInfo = await Promise.all(
       uniqueUserIds.map(uid => getuser_by_id(uid))
     );
@@ -378,3 +379,4 @@ export default async function Page({
       </div>
     )
 }
+
