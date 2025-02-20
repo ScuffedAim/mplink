@@ -1,36 +1,43 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# MPLink - osu! Match Score Viewer
 
-## Getting Started
+MPLink is a real-time score viewer for osu! multiplayer matches. It provides a clean and intuitive interface to view match scores, complete with player information, beatmap details, and score statistics.
 
-First, run the development server:
+## Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- Real-time score updates (refreshes every 5 seconds)
+- Detailed score information including:
+  - Player names with country flags
+  - Score values and accuracy
+  - Hit counts (300s/100s/50s/misses)
+  - Mod combinations used
+  - Maximum combo achieved
+- Beatmap information including:
+  - Artist and title
+  - Difficulty name
+  - Cover image
+- Automatic grouping of scores by map and time played
+- Responsive design with mobile support
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Technical Details
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- Built with Next.js 14
+- Uses Tailwind CSS for styling
+- Integrates with the banchopy API for match data
+- Server-side rendering with client-side updates
+- TypeScript for type safety
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## API Endpoints Used
 
-## Learn More
+- `api.scuffedaim.xyz/v2/scores/match/{match_id}` - Match scores
+- `api.scuffedaim.xyz/v1/get_map_info` - Beatmap information
+- `api.scuffedaim.xyz/v2/players/{user_id}` - Player information
 
-To learn more about Next.js, take a look at the following resources:
+## Usage
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Navigate to the site
+2. Append the match ID to the URL (e.g., `/12345`)
+3. View real-time updates of the match scores
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Development
+ - npm run dev
+ - go to [localhost:3000](http://localhost:3000)
