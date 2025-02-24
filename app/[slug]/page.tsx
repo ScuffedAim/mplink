@@ -77,6 +77,11 @@ interface ModFlags {
   };
 }
 
+interface CachedImage {
+  url: string;
+  blob?: string;
+}
+
 const MODS: ModFlags = {
   1: { name: "NoFail", icon: "NF" },
   2: { name: "Easy", icon: "EZ" },
@@ -126,6 +131,7 @@ function ScoresDisplay({ initialScores, initialMapInfo, initialUserInfo, slug }:
   const [, setScores] = useState(initialScores);
   const [mapInfoByHash, setMapInfoByHash] = useState(initialMapInfo);
   const [userInfoById, setUserInfoById] = useState(initialUserInfo);
+  const [imageCache, setImageCache] = useState<{[key: string]: CachedImage}>({});
   
   // Initialize scoresByMap with the initial scores
   const initialGroupedScores = initialScores.data.reduce((acc: { [key: string]: Score[] }, score: Score) => {
@@ -162,8 +168,55 @@ function ScoresDisplay({ initialScores, initialMapInfo, initialUserInfo, slug }:
 
   const [scoresByMap, setScoresByMap] = useState<{[key: string]: Score[]}>(initialGroupedScores);
 
+  // Add this function to handle image caching
+  const getCachedImage = async (setId: number) => {
+    const url = `https://assets.ppy.sh/beatmaps/${setId}/covers/cover.jpg`;
+    
+    // Return cached blob if available
+    if (imageCache[setId]?.blob) {
+      return imageCache[setId].blob;
+    }
+
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const reader = new FileReader();
+      
+      return new Promise((resolve) => {
+        reader.onloadend = () => {
+          const base64data = reader.result as string;
+          setImageCache(prev => ({
+            ...prev,
+            [setId]: { url, blob: base64data }
+          }));
+          resolve(base64data);
+        };
+        reader.readAsDataURL(blob);
+      });
+    } catch (error) {
+      console.error('Error caching image:', error);
+      return url; // Fallback to direct URL if caching fails
+    }
+  };
+
   useEffect(() => {
+    // Pre-cache images for initial maps
+    Object.values(mapInfoByHash).forEach(map => {
+      if (map?.set_id) {
+        getCachedImage(map.set_id);
+      }
+    });
+
+    let lastFetchTime = Date.now();
+    const MINIMUM_FETCH_INTERVAL = 5000; // 5 seconds minimum between fetches
+
     function fetchLatestData() {
+      const now = Date.now();
+      if (now - lastFetchTime < MINIMUM_FETCH_INTERVAL) {
+        return; // Skip if we fetched too recently
+      }
+      lastFetchTime = now;
+
       fetch(`https://api.scuffedaim.xyz/v2/scores/match/${slug}`)
         .then(r => r.json())
         .then(newScores => {
@@ -256,8 +309,8 @@ function ScoresDisplay({ initialScores, initialMapInfo, initialUserInfo, slug }:
     // Initial fetch
     fetchLatestData();
 
-    // Set up polling
-    const interval = setInterval(fetchLatestData, 5000);
+    // Set up polling with a more reasonable interval (15 seconds)
+    const interval = setInterval(fetchLatestData, 15000);
     return () => clearInterval(interval);
   }, [slug, mapInfoByHash, userInfoById]);
 
@@ -267,6 +320,11 @@ function ScoresDisplay({ initialScores, initialMapInfo, initialUserInfo, slug }:
         const mapHash = mapKey.split('_')[0];
         const map = mapInfoByHash[mapHash];
         const firstScoreTime = new Date(mapScores[0].play_time);
+        
+        // Use cached image or URL
+        const imageSource = imageCache[map?.set_id]?.blob || 
+          `https://assets.ppy.sh/beatmaps/${map?.set_id}/covers/cover.jpg`;
+
         return (
           <div key={mapKey} className="mb-8 bg-slate-700 p-3">
             <div className="flex flex-col gap-4 bg-slate-800 p-3 rounded">
@@ -278,12 +336,14 @@ function ScoresDisplay({ initialScores, initialMapInfo, initialUserInfo, slug }:
               </h2>
               <div className="flex flex-col md:flex-row gap-4">
                 <img 
-                  src={`https://assets.ppy.sh/beatmaps/${map?.set_id}/covers/cover.jpg`}
+                  src={imageSource}
                   className={`w-full md:w-[400px] object-cover rounded-md`}
                   style={{
                     height: `${Math.max(100, Math.min(400, mapScores.length * 80))}px`
                   }}
-                  alt={map ? `${map.title} cover` : "Beatmap cover"} />
+                  alt={map ? `${map.title} cover` : "Beatmap cover"}
+                  loading="lazy"
+                />
                 
                 <div className="flex-1 grid gap-1">
                   {(mapScores as Score[]).map((score, scoreIndex) => {
