@@ -107,6 +107,7 @@ function getModsFromFlags(flags: number): string[] {
 }
 
 async function getmap_by_hash(map_md5: string): Promise<BeatmapInfo> {
+    console.log("getting map by hash")
     const data = await fetch("https://api.scuffedaim.xyz/v1/get_map_info?md5=" + map_md5, {
       next: { revalidate: 5 }
     });
@@ -115,6 +116,7 @@ async function getmap_by_hash(map_md5: string): Promise<BeatmapInfo> {
 }
 
 async function getuser_by_id(uid: number): Promise<UserInfo> {
+    console.log("getting user by id")
     const data = await fetch("https://api.scuffedaim.xyz/v2/players/" + uid, {
       next: { revalidate: 5 }
     });
@@ -211,6 +213,7 @@ function ScoresDisplay({ initialScores, initialMapInfo, initialUserInfo, slug }:
     const MINIMUM_FETCH_INTERVAL = 5000; // 5 seconds minimum between fetches
 
     function fetchLatestData() {
+      console.log("fetching latest data")
       const now = Date.now();
       if (now - lastFetchTime < MINIMUM_FETCH_INTERVAL) {
         return; // Skip if we fetched too recently
@@ -403,7 +406,7 @@ export default async function Page({
   }) 
   {
     const slug = (await params).slug
-    
+    console.log("fetching things:thumbsup:")
     // Initial data fetch
     const scoresRes = await fetch(`https://api.scuffedaim.xyz/v2/scores/match/${slug}`);
     const scores = await scoresRes.json();
