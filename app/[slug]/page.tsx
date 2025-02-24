@@ -161,11 +161,9 @@ function ScoresDisplay({ initialScores, initialMapInfo, initialUserInfo, slug }:
     return acc;
   }, {});
 
-  // Sort initial scores
+  // Sort initial scores by score value instead of time
   Object.values(initialGroupedScores).forEach((scores) => {
-    (scores as Score[]).sort((a, b) => 
-      new Date(a.play_time).getTime() - new Date(b.play_time).getTime()
-    );
+    (scores as Score[]).sort((a, b) => b.score - a.score);
   });
 
   const [scoresByMap, setScoresByMap] = useState<{[key: string]: Score[]}>(initialGroupedScores);
@@ -295,10 +293,9 @@ function ScoresDisplay({ initialScores, initialMapInfo, initialUserInfo, slug }:
               return acc;
             }, {});
 
+            // Sort by score value instead of time
             (Object.values(groupedScores) as Score[][]).forEach(scores => {
-              scores.sort((a, b) => 
-                new Date(a.play_time).getTime() - new Date(b.play_time).getTime()
-              );
+              scores.sort((a, b) => b.score - a.score);
             });
 
             setScoresByMap(groupedScores);
